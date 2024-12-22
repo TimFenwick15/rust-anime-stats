@@ -1,4 +1,5 @@
 use std::io;
+use crate::query;
 
 #[derive(PartialEq)] // This shouldn't be part of a user input module
 pub enum Exit {
@@ -11,10 +12,8 @@ enum UserInputParsed {
     None,
     Reset,                // Clear filters
     Quit,
-    AnimeOrManga(String), // anime, manga
-    Rating(String),       // 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
-    Status(String),       // Completed, Dropped, On-Hold, Watching (anime only), Plan to Watch (anime only), Reading (Manga only), Plan to Read (Manga only)
-    Name(String),         // a, b, c, ...
+    Search,
+    Filter(query::Filter),
 }
 
 impl UserInputParsed {
@@ -25,25 +24,25 @@ impl UserInputParsed {
         match lower_user_input {
             "quit" | "exit" => UserInputParsed::Quit,
             "reset" => UserInputParsed::Reset,
+            "search" | "find" | "get" => UserInputParsed::Search,
 
-            "anime" => UserInputParsed::AnimeOrManga(String::from("anime")),
-            "manga" => UserInputParsed::AnimeOrManga(String::from("manga")),
+            "anime" => UserInputParsed::Filter(query::Filter::AnimeOrManga(String::from("anime"))),
+            "manga" => UserInputParsed::Filter(query::Filter::AnimeOrManga(String::from("manga"))),
 
             "completed" | "dropped" | "on-hold" | "watching" | "plan to watch"
-            | "reading" | "plan to read" => UserInputParsed::Status(String::from(lower_user_input)),
+            | "reading" | "plan to read" => UserInputParsed::Filter(query::Filter::Status(String::from(lower_user_input))),
             
-            "10" => UserInputParsed::Rating(String::from(lower_user_input)),
+            "10" => UserInputParsed::Filter(query::Filter::Rating(String::from(lower_user_input))),
 
             // To avoid having to write out the alphabet
             test if test.len() == 1 => {
                 let c: char = lower_user_input.chars().next().expect("No reason");
                 match c {
-                    '1'..'9' => UserInputParsed::Rating(String::from(c)),
-                    'a'..'z' => UserInputParsed::Name(String::from(c)),
+                    '1'..'9' => UserInputParsed::Filter(query::Filter::Rating(String::from(c))),
+                    'a'..'z' => UserInputParsed::Filter(query::Filter::Name(String::from(c))),
                     _ => UserInputParsed::None,
                 }
-            }
-
+            },
             _ => UserInputParsed::None,
         }
     }
@@ -51,20 +50,51 @@ impl UserInputParsed {
 
 pub struct UserInput {
     index: usize,
-    filters: [UserInputParsed; 5],
+    filters: [query::Filter; 5],
 }
 
 impl UserInput {
     pub fn new() -> UserInput {
         UserInput {
             index: 0,
-            //filters: [UserInputParsed::None.clone(); 5] // Ideally don't? These objects will be binned
-            filters: [UserInputParsed::None, UserInputParsed::None, UserInputParsed::None, UserInputParsed::None, UserInputParsed::None]
+            filters: [query::Filter::None, query::Filter::None, query::Filter::None, query::Filter::None, query::Filter::None]
         }
     }
 
+    fn print(&mut self) {
+        println!("Filters: {:?}, {:?}, {:?}, {:?}, {:?}",
+            self.filters[0], self.filters[1], self.filters[2], self.filters[3], self.filters[4]);
+        query::im_here();
+    }
+
+    fn read_input(&mut self) -> Result<String, io::Error> {
+        let mut buffer = String::new();
+        let stdin = io::stdin();
+        stdin.read_line(&mut buffer)?;
+        Ok(buffer)
+    }
+
+    fn reset(&mut self) {
+        for filter in self.filters.iter_mut() {
+            *filter = query::Filter::None;
+        }
+    }
+
+    fn add_filter(&mut self, filter: query::Filter) {
+        self.filters[self.index] = filter;
+        self.index += 1;
+        if self.index >= 5 {
+            self.index = 0;
+        }
+        self.print();
+    }
+
+    fn query(&mut self) {
+        self.print();
+    }
+
     pub fn run(&mut self) -> Exit {
-        let mut buffer = match read_input() {
+        let mut buffer = match self.read_input() {
             Ok(v) => v,
             Err(_e) => String::new(),
         };
@@ -76,30 +106,18 @@ impl UserInput {
         match input {
             UserInputParsed::Quit => Exit::Quit,
             UserInputParsed::Reset => {
-                for filter in self.filters.iter_mut() {
-                    *filter = UserInputParsed::None;
-                }
+                self.reset();
                 Exit::Stay
             },
-            UserInputParsed::AnimeOrManga(_) | UserInputParsed::Rating(_)
-                    | UserInputParsed::Status(_) | UserInputParsed::Name(_) => {
-                self.filters[self.index] = input;
-                self.index += 1;
-                if self.index >= 5 {
-                    self.index = 0;
-                }
-                println!("Filters: {:?}, {:?}, {:?}, {:?}, {:?}",
-                    self.filters[0], self.filters[1], self.filters[2], self.filters[3], self.filters[4]);
+            UserInputParsed::Search => {
+                self.query();
+                Exit::Stay
+            },
+            UserInputParsed::Filter(f) => {
+                self.add_filter(f);
                 Exit::Stay
             },
             _ => Exit::Stay,
         }
     }
-}
-
-fn read_input() -> Result<String, io::Error> {
-    let mut buffer = String::new();
-    let stdin = io::stdin();
-    stdin.read_line(&mut buffer)?;
-    Ok(buffer)
 }

@@ -11,7 +11,6 @@ File handling: https://doc.rust-lang.org/std/fs/struct.File.html
 XML parsing: https://docs.rs/xmlparser/latest/xmlparser/
 
 ## match
-
 Surprised this works, each match arm has a different type.
 
 ```
@@ -54,14 +53,16 @@ let str = match fs::read_to_string(filepath) {
 };
 ```
 
+## Crates/Modules
+I don't understand this well yet and probably haven't correctly organised my source files. This post helped getting started: https://stackoverflow.com/questions/69868409/how-do-i-split-my-rust-program-into-many-files
+
+## Other Rust Notes
+Rust embedded book: https://doc.rust-lang.org/stable/embedded-book/
 
 # MyAnimeList
 Can export anime or manga ratings for your account here: https://myanimelist.net/panel.php?go=export
 
 `gzip -d animelist.xml.gz`
-
-# Other Rust Notes
-Rust embedded book: https://doc.rust-lang.org/stable/embedded-book/
 
 # Code Design
 ## Data

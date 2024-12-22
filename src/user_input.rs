@@ -1,5 +1,6 @@
 use std::io;
 use crate::query::{Query, Filter};
+use crate::anime_manga::AnimeManga;
 
 #[derive(PartialEq)] // This shouldn't be part of a user input module
 pub enum Exit {
@@ -38,8 +39,8 @@ impl UserInputParsed {
             test if test.len() == 1 => {
                 let c: char = lower_user_input.chars().next().expect("No reason");
                 match c {
-                    '1'..'9' => UserInputParsed::Filter(Filter::Rating(String::from(c))),
-                    'a'..'z' => UserInputParsed::Filter(Filter::Name(String::from(c))),
+                    '1'..='9' => UserInputParsed::Filter(Filter::Rating(String::from(c))),
+                    'a'..='z' => UserInputParsed::Filter(Filter::Name(String::from(c))),
                     _ => UserInputParsed::None,
                 }
             },
@@ -83,7 +84,10 @@ impl UserInput {
                 Exit::Stay
             },
             UserInputParsed::Search => {
-                self.data.search();
+                for x in self.data.search() {
+                    println!("{}, {}, {}, {}", x.name, x.format, x.status, x.rating);
+                }
+
                 Exit::Stay
             },
             UserInputParsed::Filter(f) => {

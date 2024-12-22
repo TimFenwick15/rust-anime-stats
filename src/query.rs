@@ -1,4 +1,5 @@
-use crate::mal;
+use crate::mal::Data;
+use crate::anime_manga::AnimeManga;
 
 #[derive(Debug)]
 pub enum Filter {
@@ -42,7 +43,34 @@ impl Query {
         self.print();
     }
 
-    pub fn search(&mut self) {
-        self.print();
+    pub fn search(&mut self) -> Vec<AnimeManga>{
+        let mut filtered_data = Vec::new();
+
+        let mut data = Data::new();
+        data.search();
+
+        for item in data.items {
+            let mut include = true;
+
+            for filter in &self.filters {
+                let exclude = match filter {
+                    Filter::None => false,
+                    Filter::AnimeOrManga(x) => item.format != *x,
+                    Filter::Rating(x) => item.rating != *x,
+                    Filter::Status(x) => item.status != *x,
+                    Filter::Name(x) => item.name.to_lowercase().as_bytes()[0] != x.as_bytes()[0],
+                };
+                if exclude {
+                    include = false;
+                    break;
+                }
+            }
+
+            if include {
+                filtered_data.push(item.clone());
+            }
+        }
+
+        return filtered_data;
     }
 }

@@ -1,6 +1,7 @@
-use std::fs;
 use std::fs::File;
 use std::io::prelude::*;
+
+mod user_input;
 
 fn read_anime_list(file: &str) -> std::io::Result<String> {
     let mut file = File::open(file)?;
@@ -18,15 +19,14 @@ fn main () {
             std::process::exit(1);
         }
     };
-    /* This is a simpler way to do this, but want an example using File above
-    let data = match fs::read_to_string("animelist.xml") {
-        Ok(value) => value,
-        Err(error) => {
-            println!("File not found: {}", error);
-            std::process::exit(1);
+    println!("{}", &data[..100]);
+
+    let mut ui = user_input::UserInput::new();
+    loop {
+        if user_input::Exit::Quit == ui.run() {
+            break;
         }
-    };*/
-    println!("{}", data);
+    }
 
     // Parse XML
     //

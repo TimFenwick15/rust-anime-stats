@@ -9,22 +9,40 @@ pub enum Filter {
     Name(String),         // a, b, c, ...
 }
 
-/*pub struct Query {
-    filters: [Filter; 5]
+pub struct Query {
+    index: usize,
+    filters: [Filter; 5],
 }
 
 impl Query {
     pub fn new() -> Query {
         Query {
+            index: 0,
             filters: [Filter::None, Filter::None, Filter::None, Filter::None, Filter::None],
         }
     }
 
-    pub fn add(filter: Filter) {
-
+    pub fn print(&mut self) {
+        println!("Filters: {:?}, {:?}, {:?}, {:?}, {:?}",
+        self.filters[0], self.filters[1], self.filters[2], self.filters[3], self.filters[4]);
     }
-}*/
 
-pub fn im_here() {
-    println!("hello world");
+    pub fn reset(&mut self) {
+        for filter in self.filters.iter_mut() {
+            *filter = Filter::None;
+        }
+    }
+
+    pub fn add(&mut self, filter: Filter) {
+        self.filters[self.index] = filter;
+        self.index += 1;
+        if self.index >= 5 {
+            self.index = 0;
+        }
+        self.print();
+    }
+
+    pub fn search(&mut self) {
+        self.print();
+    }
 }

@@ -2,10 +2,12 @@ mod user_input; // Not sure I'm doing this right, if main declares the modules, 
 mod query;
 mod mal;
 
+use crate::user_input::{Exit, UserInput};
+
 fn main () {
-    let mut ui = user_input::UserInput::new();
+    let mut ui = UserInput::new();
     loop {
-        if user_input::Exit::Quit == ui.run() {
+        if Exit::Quit == ui.run() {
             break;
         }
     }

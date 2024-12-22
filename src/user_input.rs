@@ -1,5 +1,5 @@
 use std::io;
-use crate::query;
+use crate::query::{Query, Filter};
 
 #[derive(PartialEq)] // This shouldn't be part of a user input module
 pub enum Exit {
@@ -10,10 +10,10 @@ pub enum Exit {
 #[derive(Debug)]
 enum UserInputParsed {
     None,
-    Reset,                // Clear filters
+    Reset, // Clear filters
     Quit,
     Search,
-    Filter(query::Filter),
+    Filter(Filter),
 }
 
 impl UserInputParsed {
@@ -26,20 +26,20 @@ impl UserInputParsed {
             "reset" => UserInputParsed::Reset,
             "search" | "find" | "get" => UserInputParsed::Search,
 
-            "anime" => UserInputParsed::Filter(query::Filter::AnimeOrManga(String::from("anime"))),
-            "manga" => UserInputParsed::Filter(query::Filter::AnimeOrManga(String::from("manga"))),
+            "anime" => UserInputParsed::Filter(Filter::AnimeOrManga(String::from("anime"))),
+            "manga" => UserInputParsed::Filter(Filter::AnimeOrManga(String::from("manga"))),
 
             "completed" | "dropped" | "on-hold" | "watching" | "plan to watch"
-            | "reading" | "plan to read" => UserInputParsed::Filter(query::Filter::Status(String::from(lower_user_input))),
+            | "reading" | "plan to read" => UserInputParsed::Filter(Filter::Status(String::from(lower_user_input))),
             
-            "10" => UserInputParsed::Filter(query::Filter::Rating(String::from(lower_user_input))),
+            "10" => UserInputParsed::Filter(Filter::Rating(String::from(lower_user_input))),
 
             // To avoid having to write out the alphabet
             test if test.len() == 1 => {
                 let c: char = lower_user_input.chars().next().expect("No reason");
                 match c {
-                    '1'..'9' => UserInputParsed::Filter(query::Filter::Rating(String::from(c))),
-                    'a'..'z' => UserInputParsed::Filter(query::Filter::Name(String::from(c))),
+                    '1'..'9' => UserInputParsed::Filter(Filter::Rating(String::from(c))),
+                    'a'..'z' => UserInputParsed::Filter(Filter::Name(String::from(c))),
                     _ => UserInputParsed::None,
                 }
             },
@@ -49,22 +49,14 @@ impl UserInputParsed {
 }
 
 pub struct UserInput {
-    index: usize,
-    filters: [query::Filter; 5],
+    data: Query,
 }
 
 impl UserInput {
     pub fn new() -> UserInput {
         UserInput {
-            index: 0,
-            filters: [query::Filter::None, query::Filter::None, query::Filter::None, query::Filter::None, query::Filter::None]
+            data: Query::new(),
         }
-    }
-
-    fn print(&mut self) {
-        println!("Filters: {:?}, {:?}, {:?}, {:?}, {:?}",
-            self.filters[0], self.filters[1], self.filters[2], self.filters[3], self.filters[4]);
-        query::im_here();
     }
 
     fn read_input(&mut self) -> Result<String, io::Error> {
@@ -72,25 +64,6 @@ impl UserInput {
         let stdin = io::stdin();
         stdin.read_line(&mut buffer)?;
         Ok(buffer)
-    }
-
-    fn reset(&mut self) {
-        for filter in self.filters.iter_mut() {
-            *filter = query::Filter::None;
-        }
-    }
-
-    fn add_filter(&mut self, filter: query::Filter) {
-        self.filters[self.index] = filter;
-        self.index += 1;
-        if self.index >= 5 {
-            self.index = 0;
-        }
-        self.print();
-    }
-
-    fn query(&mut self) {
-        self.print();
     }
 
     pub fn run(&mut self) -> Exit {
@@ -106,15 +79,15 @@ impl UserInput {
         match input {
             UserInputParsed::Quit => Exit::Quit,
             UserInputParsed::Reset => {
-                self.reset();
+                self.data.reset();
                 Exit::Stay
             },
             UserInputParsed::Search => {
-                self.query();
+                self.data.search();
                 Exit::Stay
             },
             UserInputParsed::Filter(f) => {
-                self.add_filter(f);
+                self.data.add(f);
                 Exit::Stay
             },
             _ => Exit::Stay,

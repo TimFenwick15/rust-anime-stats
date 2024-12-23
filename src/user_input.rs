@@ -1,6 +1,5 @@
 use std::io;
 use crate::query::{Query, Filter};
-use crate::anime_manga::AnimeManga;
 
 #[derive(PartialEq)] // This shouldn't be part of a user input module
 pub enum Exit {
@@ -87,6 +86,7 @@ impl UserInput {
                 for x in self.data.search() {
                     println!("{}, {}, {}, {}", x.name, x.format, x.status, x.rating);
                 }
+                println!("");
 
                 Exit::Stay
             },

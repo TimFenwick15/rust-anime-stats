@@ -57,7 +57,7 @@ impl Query {
                     Filter::None => false,
                     Filter::AnimeOrManga(x) => item.format != *x,
                     Filter::Rating(x) => item.rating != *x,
-                    Filter::Status(x) => item.status != *x,
+                    Filter::Status(x) => item.status.to_lowercase() != *x,
                     Filter::Name(x) => item.name.to_lowercase().as_bytes()[0] != x.as_bytes()[0],
                 };
                 if exclude {

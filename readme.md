@@ -5,6 +5,15 @@
 - `cargo run`
 - `rustc --version`
 
+### xml
+- `use xmlparser;` raises `no external crate 'xmlparser'`
+- `cargo install xmlparser` doesn't work, xmlparser is a cargo library, not a binary
+- `cargo add xmlparser` does work
+- Now the code does work using `use xmlparser;`
+- This library wasn't working as I expected and struggled to find examples. Decided to use another library
+- `cargo remove xmlparser`
+- `cargo add xml`
+
 ## Docs
 File handling: https://doc.rust-lang.org/std/fs/struct.File.html
 
@@ -68,7 +77,7 @@ Can export anime or manga ratings for your account here: https://myanimelist.net
 ## Data
 Anime and manga xml have similar fields, but not the same tag names. We can read both in the same way but will need to handle the different tag names.
 
-Two entries can have the title but need to be differentiated. The ID should be unique, or we could add our own ID.
+Two entries can have the same title but need to be differentiated. The ID should be unique, or we could add our own ID.
 
 - User profile data
 - Anime/manga

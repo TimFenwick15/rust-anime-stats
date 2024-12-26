@@ -1,5 +1,6 @@
 use crate::mal::Data;
 use crate::anime_manga::AnimeManga;
+use std::mem::discriminant;
 
 #[derive(Debug)]
 pub enum Filter {
@@ -10,15 +11,21 @@ pub enum Filter {
     Name(String),         // a, b, c, ...
 }
 
+// We need to be able to overwrite filters with the same type but differing data.
+// Credit to https://users.rust-lang.org/t/comparing-tuple-like-enum/88332/4
+impl PartialEq<Self> for Filter {
+    fn eq(&self, rhs: &Self) -> bool {
+        discriminant(self) == discriminant(rhs)
+    }
+}
+
 pub struct Query {
-    index: usize,
-    filters: [Filter; 5],
+    filters: [Filter; 5], // Size is hard coded, there doesn't seem to be a stable way to get this number yet
 }
 
 impl Query {
     pub fn new() -> Query {
         Query {
-            index: 0,
             filters: [Filter::None, Filter::None, Filter::None, Filter::None, Filter::None],
         }
     }
@@ -34,12 +41,23 @@ impl Query {
         }
     }
 
-    pub fn add(&mut self, filter: Filter) {
-        self.filters[self.index] = filter;
-        self.index += 1;
-        if self.index >= 5 {
-            self.index = 0;
+    pub fn add(&mut self, new_filter: Filter) {
+        // New filters with the same type as an existing one will overwrite.
+        // This is a lazy way to handle two different filters with the same type
+        // since my filters always AND with eachother.
+        // Eg filtering scores 7 and 8 would fail because the score can't equal both 7 and 8.
+        let mut none_index = 0;
+        for (i, filter) in self.filters.iter_mut().enumerate() {
+            if *filter == new_filter {
+                *filter = new_filter;
+                self.print();
+                return;
+            }
+            else if *filter == Filter::None {
+                none_index = i;
+            }
         }
+        self.filters[none_index] = new_filter;
         self.print();
     }
 
